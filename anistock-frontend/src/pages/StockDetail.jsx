@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { useNotifications } from '../context/NotificationContext';
-
-
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function StockDetail() {
   const { id } = useParams();
@@ -17,9 +16,8 @@ function StockDetail() {
   const [autoQty, setAutoQty] = useState(1);
   const [trigger, setTrigger] = useState('');
   const [type, setType] = useState('buy');
-  const [message, setMessage] = useState('');
   const [predictions, setPredictions] = useState([]);
-  const { refresh } = useNotifications(); // ✅ Add this at the top of your component
+  const { refresh } = useNotifications();
 
   useEffect(() => {
     fetchDetails();
@@ -30,7 +28,7 @@ function StockDetail() {
       const res = await api.get(`/api/characters/${id}/details`);
       setCharacter(res.data);
     } catch (err) {
-      setMessage('❌ Failed to fetch stock details');
+      toast.error('❌ Failed to fetch stock details');
     }
   };
 
@@ -40,11 +38,11 @@ function StockDetail() {
         characterId: id,
         quantity: parseInt(buyQty),
       });
-      setMessage(res.data.message);
+      toast.success(res.data.message || '✅ Purchase successful');
       fetchDetails();
       refresh();
     } catch (err) {
-      setMessage(err.response?.data?.error || '❌ Buy failed');
+      toast.error(err.response?.data?.error || '❌ Buy failed');
     }
   };
 
@@ -54,11 +52,11 @@ function StockDetail() {
         characterId: id,
         quantity: parseInt(sellQty),
       });
-      setMessage(res.data.message);
+      toast.success(res.data.message || '✅ Sale successful');
       fetchDetails();
       refresh();
     } catch (err) {
-      setMessage(err.response?.data?.error || '❌ Sell failed');
+      toast.error(err.response?.data?.error || '❌ Sell failed');
     }
   };
 
@@ -70,9 +68,9 @@ function StockDetail() {
         triggerPrice: parseFloat(trigger),
         type,
       });
-      setMessage(res.data.message);
+      toast.success(res.data.message || '✅ Auto order placed');
     } catch (err) {
-      setMessage(err.response?.data?.error || '❌ Auto-order failed');
+      toast.error(err.response?.data?.error || '❌ Auto-order failed');
     }
   };
 
@@ -81,85 +79,153 @@ function StockDetail() {
       const res = await api.get(`/api/characters/${id}/predict`);
       setPredictions(res.data.predictedPrices);
     } catch (err) {
-      setMessage(err.response?.data?.error || '❌ AI prediction failed');
+      toast.error(err.response?.data?.error || '❌ AI prediction failed');
     }
   };
 
-  if (!character) return <div>Loading stock details...</div>;
+  if (!character) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        Loading stock details...
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>{character.name} ({character.anime})</h2>
-      <p><strong>Price:</strong> ₹{character.price}</p>
-      <p><strong>Available Shares:</strong> {character.availableShares}</p>
+    <div className="min-h-screen px-6 py-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <header className="text-center">
+          <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-pink-400 to-violet-500 text-transparent bg-clip-text">
+            🧾 {character.name} ({character.anime})
+          </h1>
+          <p className="text-gray-400 mt-2 text-lg">
+            Price: <span className="text-green-400 font-semibold">{character.price} berries</span>
+          </p>
+          <p className="text-gray-400 text-sm">Available Shares: {character.availableShares}</p>
+        </header>
 
-      {/* 📈 Line Graph */}
-      <div style={{ maxWidth: '600px', marginTop: '20px' }}>
-        <h3>Price History</h3>
-        <LineChart
-          width={600}
-          height={300}
-          data={character.priceHistory.map((p, index) => ({
-            time: `T${index + 1}`,
-            price: p.price || p,
-          }))}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="price" stroke="#8884d8" strokeWidth={2} />
-        </LineChart>
+        {/* Chart */}
+        <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
+          <h2 className="text-xl font-bold mb-4">📈 Price History</h2>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={character.priceHistory.map((p, i) => ({
+                  time: `T${i + 1}`,
+                  price: p.price || p,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="time" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="price" stroke="#60a5fa" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* AI Prediction */}
+        <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
+          <h2 className="text-xl font-bold mb-4">🤖 AI Prediction</h2>
+          <button
+            onClick={handleAskAI}
+            className="px-4 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold transition"
+          >
+            Ask AI
+          </button>
+          {predictions.length > 0 && (
+            <p className="mt-4 text-green-400 text-sm">🔮 {predictions.join(', ')} berries</p>
+          )}
+        </div>
+
+        {/* Buy/Sell Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Buy */}
+          <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
+            <h2 className="text-xl font-bold mb-4">🛒 Buy</h2>
+            <input
+              type="number"
+              value={buyQty}
+              min="1"
+              onChange={(e) => setBuyQty(e.target.value)}
+              className="w-full p-2 rounded-md bg-slate-700 text-white mb-4"
+            />
+            <button
+              onClick={handleBuy}
+              className="w-full py-2 bg-green-500 hover:bg-green-600 rounded-md font-bold transition"
+            >
+              Buy Now
+            </button>
+          </div>
+
+          {/* Sell */}
+          <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
+            <h2 className="text-xl font-bold mb-4">📤 Sell</h2>
+            <input
+              type="number"
+              value={sellQty}
+              min="1"
+              onChange={(e) => setSellQty(e.target.value)}
+              className="w-full p-2 rounded-md bg-slate-700 text-white mb-4"
+            />
+            <button
+              onClick={handleSell}
+              className="w-full py-2 bg-red-500 hover:bg-red-600 rounded-md font-bold transition"
+            >
+              Sell Now
+            </button>
+          </div>
+        </div>
+
+        {/* Auto Order */}
+        <div className="bg-slate-800/30 p-6 rounded-xl border border-white/10 shadow-xl backdrop-blur-md">
+          <h2 className="text-xl font-bold mb-4">⚙️ Auto Buy/Sell</h2>
+          <div className="flex flex-col md:flex-row gap-4">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="p-2 rounded-md bg-slate-700 text-white flex-1"
+            >
+              <option value="buy">Auto Buy</option>
+              <option value="sell">Auto Sell</option>
+            </select>
+            <input
+              type="number"
+              placeholder="Trigger Price"
+              value={trigger}
+              onChange={(e) => setTrigger(e.target.value)}
+              className="p-2 rounded-md bg-slate-700 text-white flex-1"
+            />
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={autoQty}
+              onChange={(e) => setAutoQty(e.target.value)}
+              className="p-2 rounded-md bg-slate-700 text-white flex-1"
+            />
+            <button
+              onClick={handleAutoOrder}
+              className="px-4 py-2 rounded-md bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+            >
+              Place Order
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 🧠 AI Predictions */}
-      <div style={{ marginTop: '30px' }}>
-        <h3>Ask AI Prediction</h3>
-        <button onClick={handleAskAI}>Get AI Predictions</button>
-        {predictions.length > 0 && (
-          <p style={{ marginTop: '10px' }}>🔮 Predicted Prices: {predictions.join(', ')}</p>
-        )}
-      </div>
-
-      {/* 💰 Buy */}
-      <div style={{ marginTop: '30px' }}>
-        <h3>Buy</h3>
-        <input type="number" value={buyQty} min="1" onChange={(e) => setBuyQty(e.target.value)} />
-        <button onClick={handleBuy}>Buy</button>
-      </div>
-
-      {/* 📤 Sell */}
-      <div style={{ marginTop: '20px' }}>
-        <h3>Sell</h3>
-        <input type="number" value={sellQty} min="1" onChange={(e) => setSellQty(e.target.value)} />
-        <button onClick={handleSell}>Sell</button>
-      </div>
-
-      {/* 🤖 Auto Buy/Sell */}
-      <div style={{ marginTop: '20px' }}>
-        <h3>Auto Buy/Sell</h3>
-        <select value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="buy">Auto Buy</option>
-          <option value="sell">Auto Sell</option>
-        </select>
-        <input
-          type="number"
-          placeholder="Trigger Price"
-          value={trigger}
-          onChange={(e) => setTrigger(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={autoQty}
-          onChange={(e) => setAutoQty(e.target.value)}
-        />
-        <button onClick={handleAutoOrder}>Place Auto Order</button>
-      </div>
-
-      {/* 📬 Feedback */}
-      {message && <p style={{ marginTop: '20px', color: 'green' }}>{message}</p>}
+      {/* Toast Container */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        theme="dark"
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
     </div>
   );
 }

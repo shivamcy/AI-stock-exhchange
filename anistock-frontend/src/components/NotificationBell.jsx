@@ -5,8 +5,8 @@ function NotificationBell() {
   const {
     notifications,
     unreadCount,
-    refresh: fetchNotifications,   
-    markAllRead: markAllAsRead 
+    refresh: fetchNotifications,
+    markAllRead: markAllAsRead
   } = useNotifications();
 
   const [open, setOpen] = useState(false);
@@ -30,82 +30,45 @@ function NotificationBell() {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }} ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#fff',
-          position: 'relative'
-        }}
+        className="relative text-white text-xl focus:outline-none bg-transparent border-none p-0"
       >
         🔔
         {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '-5px',
-            right: '-5px',
-            background: 'red',
-            borderRadius: '50%',
-            color: 'white',
-            fontSize: '10px',
-            padding: '2px 5px',
-          }}>
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '30px',
-          background: '#fff',
-          color: '#000',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          width: '300px',
-          borderRadius: '8px',
-          zIndex: 1000,
-          maxHeight: '400px',
-          overflowY: 'auto',
-        }}>
-          <div style={{
-            padding: '10px',
-            borderBottom: '1px solid #ccc',
-            fontWeight: 'bold',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
+        <div className="absolute right-0 mt-2 w-80 bg-[#0d1117] border border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+          <div className="px-4 py-3 border-b border-gray-700 flex justify-between items-center text-white font-semibold bg-[#0d1117] rounded-t-xl">
             <span>Notifications</span>
             <button
               onClick={markAllAsRead}
-              style={{
-                fontSize: '12px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#007bff'
-              }}
+              className="text-sm text-blue-400 hover:underline"
             >
               Mark all read
             </button>
           </div>
+
           {notifications.length === 0 ? (
-            <div style={{ padding: '10px' }}>No notifications</div>
+            <div className="px-4 py-3 text-sm text-gray-400">No notifications</div>
           ) : (
             notifications.map((n, idx) => (
-              <div key={idx} style={{
-                padding: '10px',
-                borderBottom: '1px solid #eee',
-                backgroundColor: n.read ? '#f9f9f9' : '#fffbcc'
-              }}>
-                {n.message}
-                <br />
-                <small>{new Date(n.date).toLocaleString()}</small>
+              <div
+                key={idx}
+                className={`px-4 py-3 border-b border-gray-800 text-sm ${
+                  n.read ? 'bg-[#0d1117] text-gray-300' : 'bg-yellow-100 text-gray-800'
+                }`}
+              >
+                <p>{n.message}</p>
+                <small className="block mt-1 text-xs opacity-70">
+                  {new Date(n.date).toLocaleString()}
+                </small>
               </div>
             ))
           )}

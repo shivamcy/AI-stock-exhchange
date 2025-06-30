@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+body {
+  background-color: #0e0f1a;
+  background-image: radial-gradient(circle, #1a1c2c 1px, transparent 1px);
+  background-size: 16px 16px;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+

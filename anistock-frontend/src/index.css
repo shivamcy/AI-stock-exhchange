@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -24,12 +28,13 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden; /* <-- this fixes the blank space */
+  background-color: #0e0f1a; /* matches your app background */
+  color: white;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
-
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

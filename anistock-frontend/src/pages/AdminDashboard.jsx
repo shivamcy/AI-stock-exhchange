@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 
 function AdminDashboard() {
-  // Character states
   const [characterData, setCharacterData] = useState({
     name: '',
     description: '',
@@ -12,7 +11,6 @@ function AdminDashboard() {
   });
   const [message, setMessage] = useState('');
 
-  // IPO states
   const [characters, setCharacters] = useState([]);
   const [ipoCharId, setIpoCharId] = useState('');
   const [ipoPrice, setIpoPrice] = useState('');
@@ -21,7 +19,6 @@ function AdminDashboard() {
   const [activeIpos, setActiveIpos] = useState([]);
   const [ipoMessage, setIpoMessage] = useState('');
 
-  // Load characters + IPOs
   useEffect(() => {
     fetchCharacters();
     fetchActiveIPOs();
@@ -45,7 +42,6 @@ function AdminDashboard() {
     }
   };
 
-  // Handle Add Character
   const handleChange = (e) => {
     setCharacterData({ ...characterData, [e.target.name]: e.target.value });
   };
@@ -61,13 +57,12 @@ function AdminDashboard() {
       });
       setMessage(res.data.message);
       setCharacterData({ name: '', description: '', price: '', availableShares: '', trendScore: '' });
-      fetchCharacters(); // Refresh for IPO dropdown
+      fetchCharacters();
     } catch (err) {
       setMessage(err.response?.data?.error || '❌ Failed to add character');
     }
   };
 
-  // Handle Create IPO
   const handleCreateIPO = async () => {
     try {
       const res = await api.post('/api/admin/create-ipo', {
@@ -87,7 +82,6 @@ function AdminDashboard() {
     }
   };
 
-  // Handle Allot IPO
   const handleAllotIPO = async (ipoId) => {
     try {
       const res = await api.post(`/api/admin/allot-ipo/${ipoId}`);
@@ -99,51 +93,60 @@ function AdminDashboard() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>🧑‍💼 Admin Dashboard</h2>
+    <div className="p-6 max-w-4xl mx-auto text-white">
+      <h2 className="text-2xl font-bold mb-6">🧑‍💼 Admin Dashboard</h2>
 
-      {/* Add Character */}
-      <h3>➕ Add New Character</h3>
-      <form onSubmit={handleAddCharacter}>
-        <input type="text" name="name" placeholder="Name" value={characterData.name} onChange={handleChange} required /><br />
-        <input type="text" name="anime" placeholder="anime" value={characterData.anime} onChange={handleChange} /><br />
-        <input type="number" name="price" placeholder="Price" value={characterData.price} onChange={handleChange} required /><br />
-        <input type="number" name="availableShares" placeholder="Available Shares (default 1000)" value={characterData.availableShares} onChange={handleChange} /><br />
-        <input type="number" name="trendScore" placeholder="Trend Score (default 0)" value={characterData.trendScore} onChange={handleChange} /><br />
-        <button type="submit">Add Character</button>
-      </form>
-      {message && <p style={{ marginTop: '15px', color: 'green' }}>{message}</p>}
+      {/* ➕ Add New Character */}
+      <div className="bg-[#1f2937] p-5 rounded-xl mb-10">
+        <h3 className="text-xl font-semibold mb-4">➕ Add New Character</h3>
+        <form onSubmit={handleAddCharacter} className="grid gap-3">
+          <input type="text" name="name" placeholder="Name" value={characterData.name} onChange={handleChange} required className="input" />
+          <input type="text" name="anime" placeholder="Anime" value={characterData.anime} onChange={handleChange} className="input" />
+          <input type="number" name="price" placeholder="Price" value={characterData.price} onChange={handleChange} required className="input" />
+          <input type="number" name="availableShares" placeholder="Available Shares (default 1000)" value={characterData.availableShares} onChange={handleChange} className="input" />
+          <input type="number" name="trendScore" placeholder="Trend Score (default 0)" value={characterData.trendScore} onChange={handleChange} className="input" />
+          <button type="submit" className="btn-primary mt-2">Add Character</button>
+        </form>
+        {message && <p className="text-green-400 mt-3">{message}</p>}
+      </div>
 
-      <hr style={{ margin: '30px 0' }} />
+      {/* 📈 Create IPO */}
+      <div className="bg-[#1f2937] p-5 rounded-xl mb-10">
+        <h3 className="text-xl font-semibold mb-4">📈 Create IPO</h3>
+        <div className="grid gap-3">
+          <select value={ipoCharId} onChange={(e) => setIpoCharId(e.target.value)} className="input">
+            <option value="">-- Select Character --</option>
+            {characters.map((char) => (
+              <option key={char._id} value={char._id}>{char.name}</option>
+            ))}
+          </select>
+          <input type="number" placeholder="IPO Price" value={ipoPrice} onChange={(e) => setIpoPrice(e.target.value)} className="input" />
+          <input type="number" placeholder="Total Shares" value={ipoShares} onChange={(e) => setIpoShares(e.target.value)} className="input" />
+          <input type="datetime-local" value={ipoDeadline} onChange={(e) => setIpoDeadline(e.target.value)} className="input" />
+          <button onClick={handleCreateIPO} className="btn-primary mt-2">Create IPO</button>
+        </div>
+        {ipoMessage && <p className="text-green-400 mt-3">{ipoMessage}</p>}
+      </div>
 
-      {/* Create IPO */}
-      <h3>📈 Create IPO</h3>
-      <select value={ipoCharId} onChange={(e) => setIpoCharId(e.target.value)} required>
-        <option value="">-- Select Character --</option>
-        {characters.map((char) => (
-          <option key={char._id} value={char._id}>{char.name}</option>
-        ))}
-      </select><br />
-      <input type="number" placeholder="IPO Price" value={ipoPrice} onChange={(e) => setIpoPrice(e.target.value)} /><br />
-      <input type="number" placeholder="Total Shares" value={ipoShares} onChange={(e) => setIpoShares(e.target.value)} /><br />
-      <input type="datetime-local" value={ipoDeadline} onChange={(e) => setIpoDeadline(e.target.value)} /><br />
-      <button onClick={handleCreateIPO}>Create IPO</button>
-      {ipoMessage && <p style={{ marginTop: '15px', color: 'green' }}>{ipoMessage}</p>}
-
-      {/* Active IPOs */}
-      <h3 style={{ marginTop: '40px' }}>📋 Active IPOs</h3>
-      {activeIpos.length === 0 ? (
-        <p>No active IPOs available</p>
-      ) : (
-        <ul>
-          {activeIpos.map(ipo => (
-            <li key={ipo._id}>
-              <strong>{ipo.characterId?.name}</strong> | ₹{ipo.price} | Deadline: {new Date(ipo.deadline).toLocaleString()}
-              <button onClick={() => handleAllotIPO(ipo._id)} style={{ marginLeft: '10px' }}>🎯 Allot</button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* 📋 Active IPOs */}
+      <div className="bg-[#1f2937] p-5 rounded-xl">
+        <h3 className="text-xl font-semibold mb-4">📋 Active IPOs</h3>
+        {activeIpos.length === 0 ? (
+          <p className="text-gray-400">No active IPOs available</p>
+        ) : (
+          <ul className="space-y-3">
+            {activeIpos.map(ipo => (
+              <li key={ipo._id} className="bg-[#111827] p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <strong>{ipo.characterId?.name}</strong><br />
+                  <span className="text-sm text-gray-400">₹{ipo.price} | Deadline: {new Date(ipo.deadline).toLocaleString()}</span>
+                </div>
+                <button onClick={() => handleAllotIPO(ipo._id)} className="btn-secondary">🎯 Allot</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
