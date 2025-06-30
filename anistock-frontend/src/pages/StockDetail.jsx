@@ -4,6 +4,10 @@ import api from '../api';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
+import { useNotifications } from '../context/NotificationContext';
+
+
+
 
 function StockDetail() {
   const { id } = useParams();
@@ -15,6 +19,7 @@ function StockDetail() {
   const [type, setType] = useState('buy');
   const [message, setMessage] = useState('');
   const [predictions, setPredictions] = useState([]);
+  const { refresh } = useNotifications(); // ✅ Add this at the top of your component
 
   useEffect(() => {
     fetchDetails();
@@ -37,6 +42,7 @@ function StockDetail() {
       });
       setMessage(res.data.message);
       fetchDetails();
+      refresh();
     } catch (err) {
       setMessage(err.response?.data?.error || '❌ Buy failed');
     }
@@ -50,6 +56,7 @@ function StockDetail() {
       });
       setMessage(res.data.message);
       fetchDetails();
+      refresh();
     } catch (err) {
       setMessage(err.response?.data?.error || '❌ Sell failed');
     }

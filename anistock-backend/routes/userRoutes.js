@@ -190,6 +190,17 @@ router.put('/notifications/read', auth, async (req, res) => {
       res.status(500).json({ error: 'Failed to update notifications' });
     }
   });
+  // Get unread notification count
+router.get('/notifications/unread-count', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const unreadCount = user.notifications.filter(n => !n.read).length;
+    res.json({ unreadCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+});
+
   // routes/userRoutes.js
 router.post('/auto-order', auth, async (req, res) => {
   const { characterId, quantity, triggerPrice, type } = req.body;

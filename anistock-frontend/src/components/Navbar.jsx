@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const { isLoggedIn, isAdmin, logout } = useContext(AuthContext);
@@ -23,6 +24,9 @@ const Navbar = () => {
         <Link to="/ipo" style={styles.link}>IPO</Link>
 
         {isAdmin && <Link to="/admin" style={styles.link}>Admin</Link>}
+        {isLoggedIn && <NotificationBell />}
+       
+
 
         {isLoggedIn ? (
           <button onClick={handleLogout} style={styles.button}>Logout</button>

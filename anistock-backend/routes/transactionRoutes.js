@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Character = require('../models/Character');
-const auth = require('../middleware/authMiddleware'); // 👈 import auth
+const auth = require('../middleware/authMiddleware');
 
 // BUY Character (protected)
 router.post('/buy', auth, async (req, res) => {
@@ -12,26 +12,33 @@ router.post('/buy', auth, async (req, res) => {
   try {
     const user = await User.findById(userId);
     const character = await Character.findById(characterId);
-    if (!user || !character) return res.status(404).json({ error: 'User or Character not found' });
+    if (!user || !character)
+      return res.status(404).json({ error: 'User or Character not found' });
 
     const totalCost = character.price * quantity;
-    if (user.wallet < totalCost) return res.status(400).json({ error: 'Not enough Berries' });
-    if (character.availableShares < quantity) return res.status(400).json({ error: 'Not enough shares' });
+    if (user.wallet < totalCost)
+      return res.status(400).json({ error: 'Not enough Berries' });
 
-    // 🧾 Deduct wallet balance
+    if (character.availableShares < quantity)
+      return res.status(400).json({ error: 'Not enough shares available' });
+
+    // 💸 Deduct wallet and update holdings
     user.wallet -= totalCost;
 
-    // 📈 Update holdings
-    const holding = user.holdings.find(h => h.characterId.equals(character._id));
+    let holding = user.holdings.find(h => h.characterId.equals(character._id));
     if (holding) {
       const totalQty = holding.quantity + quantity;
       holding.avgPrice = ((holding.avgPrice * holding.quantity) + totalCost) / totalQty;
       holding.quantity = totalQty;
     } else {
-      user.holdings.push({ characterId: character._id, quantity, avgPrice: character.price });
+      user.holdings.push({
+        characterId: character._id,
+        quantity,
+        avgPrice: character.price
+      });
     }
 
-    // 📜 Record transaction
+    // 🧾 Record transaction
     user.transactions.push({
       type: 'buy',
       character: character.name,
@@ -39,25 +46,28 @@ router.post('/buy', auth, async (req, res) => {
       price: character.price
     });
 
-    // 📉 Decrease available shares
+    // 📊 Stock updates
     character.availableShares -= quantity;
-
-    // 📊 Record current price in price history
     character.priceHistory.push({ price: character.price });
-
-    // 💸 ✅ Increase price by 10%
     character.price = Math.round(character.price * 1.10);
 
-    // 💾 Save all changes
+    // 🔔 Notification
+    user.notifications.push({
+      message: `📈 Bought ${quantity} share(s) of ${character.name} at ${character.price} berries`,
+      date: new Date(),
+      read: false
+    });
+
+    // 💾 Save changes
     await user.save();
     await character.save();
 
     res.json({ message: '✅ Purchase successful', remainingWallet: user.wallet });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Buy error:', err);
+    res.status(500).json({ error: 'Server error during purchase' });
   }
 });
-
 
 // SELL Character (protected)
 router.post('/sell', auth, async (req, res) => {
@@ -67,12 +77,12 @@ router.post('/sell', auth, async (req, res) => {
   try {
     const user = await User.findById(userId);
     const character = await Character.findById(characterId);
-    if (!user || !character) return res.status(404).json({ error: 'User or Character not found' });
+    if (!user || !character)
+      return res.status(404).json({ error: 'User or Character not found' });
 
     const holding = user.holdings.find(h => h.characterId.equals(character._id));
-    if (!holding || holding.quantity < quantity) {
+    if (!holding || holding.quantity < quantity)
       return res.status(400).json({ error: 'Not enough shares to sell' });
-    }
 
     const totalGain = character.price * quantity;
     user.wallet += totalGain;
@@ -82,6 +92,7 @@ router.post('/sell', auth, async (req, res) => {
       user.holdings = user.holdings.filter(h => !h.characterId.equals(character._id));
     }
 
+    // 📜 Record transaction
     user.transactions.push({
       type: 'sell',
       character: character.name,
@@ -89,19 +100,26 @@ router.post('/sell', auth, async (req, res) => {
       price: character.price
     });
 
+    // 📉 Stock updates
     character.availableShares += quantity;
-
-    // 📉 Decrease price by 5%
     character.price = Math.round(character.price * 0.95);
 
+    // 🔔 Notification
+    user.notifications.push({
+      message: `📉 Sold ${quantity} share(s) of ${character.name} at ${character.price} berries`,
+      date: new Date(),
+      read: false
+    });
+
+    // 💾 Save changes
     await user.save();
     await character.save();
 
     res.json({ message: '✅ Sale successful', updatedWallet: user.wallet });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Sell error:', err);
+    res.status(500).json({ error: 'Server error during sale' });
   }
 });
-
 
 module.exports = router;
