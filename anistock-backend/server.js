@@ -19,7 +19,17 @@ const PORT = process.env.PORT || 5050;
 
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',                         // your frontend
+  'https://ai-stock-exhchange.vercel.app'         // deployed Vercel frontend
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
+
 app.use(express.json());
 app.use('/api/characters', characterRoutes);
 app.use('/api/users', userRoutes);

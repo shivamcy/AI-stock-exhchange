@@ -38,6 +38,7 @@ const handleSubmit = async (e) => {
       const isAdmin = true;
   
       login(token, isAdmin); // from context
+      localStorage.setItem('token', token);
       localStorage.setItem('userId', adminRes.data.admin._id);
       navigate('/');
     } catch (adminErr) {
@@ -46,8 +47,9 @@ const handleSubmit = async (e) => {
         const userRes = await api.post('/api/users/login', form);
         const token = userRes.data.token;
         const isAdmin = false;
-  
+    
         login(token, isAdmin); // from context
+        localStorage.setItem('token', token);
         localStorage.setItem('userId', userRes.data.userId);
         navigate('/');
       } catch (userErr) {
