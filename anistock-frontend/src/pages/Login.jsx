@@ -171,7 +171,7 @@ function Login() {
       </div>
 
       {/* CSS */}
-      <style jsx>{`
+      <style >{`
         @keyframes slideIn {
           from {
             opacity: 0;

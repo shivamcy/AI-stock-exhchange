@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import api from '../api';
 
 const NotificationContext = createContext();
-
 export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }) => {
@@ -10,6 +9,9 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return; // 🚫 Don't fetch if not logged in
+
     try {
       const res = await api.get('/api/users/notifications');
       setNotifications(res.data);
@@ -20,6 +22,9 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const markAllRead = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return; // 🚫 Skip if not logged in
+
     try {
       await api.put('/api/users/notifications/read');
       fetchNotifications();
@@ -29,16 +34,13 @@ export const NotificationProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchNotifications();
+    fetchNotifications(); // Only fetch if token exists
   }, []);
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      refresh: fetchNotifications,
-      markAllRead,
-    }}>
+    <NotificationContext.Provider
+      value={{ notifications, unreadCount, refresh: fetchNotifications, markAllRead }}
+    >
       {children}
     </NotificationContext.Provider>
   );

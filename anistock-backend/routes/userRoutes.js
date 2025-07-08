@@ -166,6 +166,7 @@ router.get('/transactions', auth, async (req, res) => {
   });
   //get notifications
   router.get('/notifications', auth, async (req, res) => {
+    console.log("🔔 /notifications called by:", req.user.id);
     try {
       const user = await User.findById(req.user.id);
       if (!user) return res.status(404).json({ error: 'User not found' });
