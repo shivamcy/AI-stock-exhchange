@@ -74,4 +74,4 @@ npm run dev
     👨‍💻 Shivam Chaudhary
     GitHub: shivamcy
 
-    “Wearing the straw hat while building AniStock ☠️”
+    “Wearing the straw hat while building Grand Line Exchange ☠️”
